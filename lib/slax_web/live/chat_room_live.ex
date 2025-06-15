@@ -1,8 +1,7 @@
 defmodule SlaxWeb.ChatRoomLive do
   use SlaxWeb, :live_view
 
-  alias Slax.Chat.Room
-  alias Slax.Repo
+  alias Slax.Chat
 
   def render(assigns) do
     ~H"""
@@ -48,27 +47,35 @@ defmodule SlaxWeb.ChatRoomLive do
   end
 
   attr :active, :boolean, required: true
-  attr :room, Room, required: true
+  attr :room, Chat.Room, required: true
 
   defp room_link(assigns) do
     ~H"""
-    <a
+    <.link
       class={["flex items-center h-8 text-sm pl-8 pr-3", (@active && "bg-slate-300") || "hover:bg-slate-300"]}
-      href="#"
+      patch={~p"/rooms/#{@room}"}
     >
       <.icon name="hero-hashtag" class="h-4 w-4"/>
       <span class={["ml-2 leading-none", @active && "font-bold"]} >
         {@room.name}
       </span>
-    </a>
+    </.link>
     """
   end
 
   def mount(_params, _session, socket) do
-    rooms = Repo.all(Room)
-    room = rooms |> List.first()
-    {:ok, assign(socket, hide_topic?: false, room: room, rooms: rooms)}
+    rooms = Chat.list_rooms()
+    {:ok, assign(socket, rooms: rooms)}
   end
+
+def handle_params(params, _uri, socket) do
+  room =
+    case Map.fetch(params, "id") do
+      {:ok, id} -> Chat.get_room!(id)
+      :error -> List.first(socket.assigns.rooms)
+  end
+  {:noreply, assign(socket, hide_topic?: false, room: room)}
+end
 
   def handle_event("toggle-topic", _unsigned_params, socket) do
     {:noreply, update(socket, :hide_topic?, &(!&1))}
