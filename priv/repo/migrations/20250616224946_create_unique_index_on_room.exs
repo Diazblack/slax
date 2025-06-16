@@ -6,6 +6,6 @@ defmodule Slax.Repo.Migrations.CreateUniqueIndexOnRoom do
   end
 
   def down do
-    drop unique_index(:rooms , :name)
+    drop unique_index(:rooms, :name)
   end
 end
