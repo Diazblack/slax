@@ -74,7 +74,7 @@ def handle_params(params, _uri, socket) do
       {:ok, id} -> Chat.get_room!(id)
       :error -> List.first(socket.assigns.rooms)
   end
-  {:noreply, assign(socket, hide_topic?: false, room: room)}
+  {:noreply, assign(socket, hide_topic?: false, room: room, page_title: "#" <> room.name)}
 end
 
   def handle_event("toggle-topic", _unsigned_params, socket) do
