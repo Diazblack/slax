@@ -29,6 +29,12 @@ defmodule SlaxWeb.ChatRoomLive do
         <div class="flex flex-col gap-1.5">
           <h1 class="text-sm font-bold leading-none">
             {@room.name}
+            <.link
+              class="font-normal text-xs text-blue-600 hover:text-blue-700"
+              navigate={~p"/rooms/#{@room}/edit"}
+            >
+              Edit
+            </.link>
           </h1>
           <div
             class={["text-xs leading-none h-3.5", @hide_topic? && "text-slate-600"]}
@@ -52,11 +58,14 @@ defmodule SlaxWeb.ChatRoomLive do
   defp room_link(assigns) do
     ~H"""
     <.link
-      class={["flex items-center h-8 text-sm pl-8 pr-3", (@active && "bg-slate-300") || "hover:bg-slate-300"]}
+      class={[
+        "flex items-center h-8 text-sm pl-8 pr-3",
+        (@active && "bg-slate-300") || "hover:bg-slate-300"
+      ]}
       patch={~p"/rooms/#{@room}"}
     >
-      <.icon name="hero-hashtag" class="h-4 w-4"/>
-      <span class={["ml-2 leading-none", @active && "font-bold"]} >
+      <.icon name="hero-hashtag" class="h-4 w-4" />
+      <span class={["ml-2 leading-none", @active && "font-bold"]}>
         {@room.name}
       </span>
     </.link>
@@ -68,14 +77,15 @@ defmodule SlaxWeb.ChatRoomLive do
     {:ok, assign(socket, rooms: rooms)}
   end
 
-def handle_params(params, _uri, socket) do
-  room =
-    case Map.fetch(params, "id") do
-      {:ok, id} -> Chat.get_room!(id)
-      :error -> List.first(socket.assigns.rooms)
+  def handle_params(params, _uri, socket) do
+    room =
+      case Map.fetch(params, "id") do
+        {:ok, id} -> Chat.get_room!(id)
+        :error -> List.first(socket.assigns.rooms)
+      end
+
+    {:noreply, assign(socket, hide_topic?: false, room: room, page_title: "#" <> room.name)}
   end
-  {:noreply, assign(socket, hide_topic?: false, room: room, page_title: "#" <> room.name)}
-end
 
   def handle_event("toggle-topic", _unsigned_params, socket) do
     {:noreply, update(socket, :hide_topic?, &(!&1))}
