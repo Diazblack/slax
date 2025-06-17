@@ -49,7 +49,7 @@ defmodule SlaxWeb.ChatRoomLive do
         </div>
         <ul class="relative z-10 flex items-center gap-4 px-4 sm:px-6 lg:px-8 justify-end">
           <li class="text-[0.8125rem] leading-6 text-zinc-900">
-            {@current_user.email}
+            {username(@current_user)}
           </li>
           <li>
             <.link
@@ -69,6 +69,9 @@ defmodule SlaxWeb.ChatRoomLive do
             </.link>
           </li>
         </ul>
+      </div>
+      <div class="flex flex-col grow overflow-auto">
+        <.message :for={message <- @messages} message={message} />
       </div>
     </div>
     """
@@ -106,10 +109,40 @@ defmodule SlaxWeb.ChatRoomLive do
         :error -> List.first(socket.assigns.rooms)
       end
 
-    {:noreply, assign(socket, hide_topic?: false, room: room, page_title: "#" <> room.name)}
+    messages = Chat.list_message_in_room(room)
+
+    {:noreply,
+     assign(socket,
+       hide_topic?: false,
+       messages: messages,
+       page_title: "#" <> room.name,
+       room: room
+     )}
   end
 
   def handle_event("toggle-topic", _unsigned_params, socket) do
     {:noreply, update(socket, :hide_topic?, &(!&1))}
+  end
+
+  attr :message, Chat.Message, required: true
+
+  defp message(assigns) do
+    ~H"""
+    <div class="relative flex px-4 py-3">
+      <div class="h-10 w-10 rounded shrink-0 bg-slate-300"></div>
+      <div class="ml-2">
+        <div class="-mt-1">
+          <.link class="text-sm font-semibold hover:underline">
+            <span>{username(@message.user)}</span>
+          </.link>
+          <p class="text-sm">{@message.body}</p>
+        </div>
+      </div>
+    </div>
+    """
+  end
+
+  defp username(user) do
+    user.email |> String.split("@") |> List.first() |> String.capitalize()
   end
 end
